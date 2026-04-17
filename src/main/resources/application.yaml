@@ -1,0 +1,38 @@
+#转接端口8080被redis占用了
+server:
+  port: 9090
+
+spring:
+  application:
+    name: Overseas-Product
+
+#数据库链接
+  datasource:
+    url: jdbc:mysql://localhost:3306/ecommerce?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: 296089
+
+#redis数据库链接
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 296089
+      database: 0
+      timeout: 5000ms
+
+
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.gadhub.overseasproduct.entity
+  configuration:
+    map-underscore-to-camel-case: true  # 下划线转驼峰(数据库 user_name → entity userName)
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印 SQL
+  global-config:
+    db-config:
+      id-type: auto  # 主键自增
+      logic-delete-field: deleted  # 逻辑删除
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
