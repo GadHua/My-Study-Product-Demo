@@ -1,10 +1,15 @@
 package com.gadhub.overseasproduct.service.impl;
+import com.gadhub.overseasproduct.common.constant.ErrorCode;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gadhub.overseasproduct.common.exception.BusinessException;
+import com.gadhub.overseasproduct.dto.UserLoginDTO;
 import com.gadhub.overseasproduct.dto.UserRegisterDTO;
 import com.gadhub.overseasproduct.entity.User;
 import com.gadhub.overseasproduct.mapper.UserMapper;
 import com.gadhub.overseasproduct.service.UserService;
+import com.gadhub.overseasproduct.util.JwtUtil;
+import com.gadhub.overseasproduct.vo.UserLoginVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
         // 1. 校验密码和确认密码是否一致
         if (!userRegisterDTO.getPassword().equals(userRegisterDTO.getConfirmPassword())) {
-            throw new RuntimeException("两次密码输入不一致");
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         // 2. 检查邮箱是否已存在
@@ -35,7 +40,7 @@ public class UserServiceImpl implements UserService {
         wrapperA.eq(User::getEmail, userRegisterDTO.getEmail());// 构造查询条件判断邮箱是否已存在
         boolean existingUser = userMapper.exists(wrapperA); // 拿查询结果
         if (existingUser) {
-            throw new RuntimeException("邮箱已被注册");
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         // 2. 检查用户名是否已存在
@@ -43,7 +48,7 @@ public class UserServiceImpl implements UserService {
         wrapperB.eq(User::getName, userRegisterDTO.getUsername());
         boolean repeatNames = userMapper.exists(wrapperB);
         if (repeatNames){
-            throw new RuntimeException("用户名已存在");
+            throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
 
 
@@ -60,18 +65,45 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
     }
 
+    public UserLoginVO login(UserLoginDTO userLoginDTO){
+
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>(); //LambdaQueryWrapper实例
+        wrapper.eq(User::getName, userLoginDTO.getUsername()); //生成语句
+
+        User user = userMapper.selectOne(wrapper); //拿返回
+        if (user == null){ // 有数据才返回，没数据则返回null，空代表没这个人
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+        }
+
+        // 用bycrypt加密，所以要passwordEncoder.matches()一样为true，取反不让进
+        if (!passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())){
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+        }
+
+//        验证通过 拿数据赋值返回
+        UserLoginVO loginVO = new UserLoginVO();
+        loginVO.setUserId(user.getId());
+        loginVO.setUsername(user.getName());
+        loginVO.setEmail(user.getEmail());
+        loginVO.setToken(JwtUtil.generateToken(user.getId()));
+        return loginVO;
+
+    }
+
+
+
     private void validateEmail(String email) {
         if (email == null || !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
-            throw new RuntimeException("邮箱格式不正确");
+            throw new BusinessException(ErrorCode.INVALID_EMAIL);
         }
     }
 
     private void validatePassword(String password) {
         if (password == null || password.length() < 8) {
-            throw new RuntimeException("密码长度不能少于8位");
+            throw new BusinessException(ErrorCode.PASSWORD_TOO_SHORT);
         }
         if (!password.matches(".*[A-Za-z].*") || !password.matches(".*\\d.*")) {
-            throw new RuntimeException("密码必须包含字母和数字");
+            throw new BusinessException(ErrorCode.PASSWORD_FORMAT_ERROR);
         }
 
     }
