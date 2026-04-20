@@ -1,17 +1,10 @@
 package com.gadhub.overseasproduct.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class CreateOrderDTO {
-    private OrderItemDTO[] orderItems;
-    private String receiverName;
-    private String email;
+    private List<OrderItemDTO> items;  // 商品列表
 }
 
-
-class OrderItemDTO{
-    private Long productId;
-    private Integer quantity;
-}

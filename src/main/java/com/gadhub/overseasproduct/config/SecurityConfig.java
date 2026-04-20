@@ -28,7 +28,12 @@ public class SecurityConfig {
 
                 // 2. 定义哪些接口需要保护，哪些可以公开
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/backend/user/register", "/api/v1/backend/user/login").permitAll() // 注册接口公开
+                        .requestMatchers(
+                       "/api/v1/backend/user/register",
+                                "/api/v1/backend/user/login",
+                                "/api/v1/backend/order/**",
+                                "/api/v1/backend/product/**"
+                        ).permitAll() // 注册接口公开
                         .anyRequest().authenticated()                         // 其他所有接口都必须登录
                 );
 

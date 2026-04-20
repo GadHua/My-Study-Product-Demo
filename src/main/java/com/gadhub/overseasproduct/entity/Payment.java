@@ -1,6 +1,5 @@
 package com.gadhub.overseasproduct.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -10,22 +9,26 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("`order`")
-public class Order {
+@TableName("payment")
+public class Payment {
     @TableId
     private Long id;
 
-    @TableField("user_id")
-    private Long userId;
+    @TableField("order_id")
+    private Long orderId;
 
-    @TableField("total_amount")
-    private BigDecimal totalAmount;
+    @TableField("amount")
+    private BigDecimal amount;
+
+    @TableField("pay_way")
+    private String payWay;
 
     @TableField("status")
     private Integer status;
 
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
+    @TableField("pay_time")
     private LocalDateTime payTime;
+
+    @TableField("transaction_id")
+    private String transactionId;
 }

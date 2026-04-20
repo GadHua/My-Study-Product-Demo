@@ -22,7 +22,13 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(11001, "商品不存在"),
     PRODUCT_ID_REQUIRED(11002, "商品ID不能为空"),
 
-
+    // 订单相关错误 12000-12999
+    ORDER_NOT_FOUND(12001, "订单不存在"),
+    ORDER_ID_REQUIRED(12002, "订单ID不能为空"),
+    ORDER_STATUS_ERROR(12003, "订单状态不正确"),
+    PRODUCT_STOCK_INSUFFICIENT(12005, "商品库存不足"),
+    PRODUCT_OFF_SHELF(12006, "商品已下架"),
+    ORDER_NOT_BELONG_TO_USER(12007, "订单不属于当前用户"),
     // 系统错误 50000-50999
     SYSTEM_ERROR(50000, "系统异常");
 
