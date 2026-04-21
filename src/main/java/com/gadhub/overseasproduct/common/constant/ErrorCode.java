@@ -29,8 +29,23 @@ public enum ErrorCode {
     PRODUCT_STOCK_INSUFFICIENT(12005, "商品库存不足"),
     PRODUCT_OFF_SHELF(12006, "商品已下架"),
     ORDER_NOT_BELONG_TO_USER(12007, "订单不属于当前用户"),
+
+    // 购物车相关错误 13000-13999
+    CART_PRODUCT_NOT_FOUND(13001, "商品不存在"),
+    CART_QUANTITY_INVALID(13002, "数量必须大于0"),
+    PRODUCT_ALREADY_IN_CART(13003, "商品已存在购物车中"),
+    CART_NOT_FOUND(13004, "购物车不存在"),
+
+    // 支付相关错误 14000-14999
+    PAYMENT_ORDER_NOT_FOUND(14001, "订单不存在"),
+    PAYMENT_ORDER_ALREADY_PAID(14002, "订单已支付"),
+    PAYMENT_ORDER_NOT_BELONG_TO_USER(14003, "订单不属于当前用户"),
+    UNSUPPORTED_PAYMENT_METHODS(14004, "不支持的支付方式"),
+
     // 系统错误 50000-50999
     SYSTEM_ERROR(50000, "系统异常");
+
+
 
     private final Integer code;
     private final String message;

@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.math.BigInteger;
 
 @Data
 @TableName("cart")
@@ -14,10 +13,10 @@ public class Cart {
     private Long id;
 
     @TableField("user_id")
-    private BigInteger userId;
+    private Long userId;
 
     @TableField("product_id")
-    private BigInteger productId;
+    private Long productId;
 
     @TableField("quantity")
     private Integer quantity;

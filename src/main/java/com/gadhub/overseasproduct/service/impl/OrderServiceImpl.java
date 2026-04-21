@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ProductMapper productMapper;
 
+    @Transactional
     @Override
     public Long createOrder(CreateOrderDTO createOrderDTO, Long userId) {
         // 1. 获取商品列表
@@ -47,7 +49,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderItemDTO item : items) {
             Product product = productMapper.selectById(item.getProductId());
-            // TODO: 验证商品是否存在、是否上架
+            // 验证商品是否存在、是否上架
             if (product == null){
                 throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
             }
@@ -55,7 +57,18 @@ public class OrderServiceImpl implements OrderService {
             if (!(product.getStatus()==1)){
                 throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
             }
-            // TODO: 累加总金额
+            // TODO: 在这里添加库存验证和扣减
+            if(product.getStock() < item.getQuantity()){
+                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+            }
+
+
+            LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Product::getId, product.getId())
+                    .setSql("stock = stock-"+item.getQuantity());
+            productMapper.update(null, updateWrapper);
+
+            // 累加总金额
             totalAmount = totalAmount.add(product.getPrice().multiply(new BigDecimal(item.getQuantity())));
         }
 
@@ -184,6 +197,7 @@ public class OrderServiceImpl implements OrderService {
         return voPage;
     }
 
+    @Transactional
     @Override
     public void cancelOrder(Long orderId, Long userId) {
        if (orderId == null){ //有没有订单ID
@@ -203,11 +217,18 @@ public class OrderServiceImpl implements OrderService {
            throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
        }
 
-        LambdaUpdateWrapper<Order> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Order::getId, orderId)
+       List<OrderItem> orderItems = orderItemMapper.selectList(new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
+        for (OrderItem item : orderItems) {
+            LambdaUpdateWrapper<Product> stockWrapper = new LambdaUpdateWrapper<>();
+            stockWrapper.eq(Product::getId, item.getProductId())
+                    .setSql("stock = stock + " + item.getQuantity());
+            productMapper.update(null, stockWrapper);
+        }
+
+       LambdaUpdateWrapper<Order> statusWrapper = new LambdaUpdateWrapper<>();
+            statusWrapper.eq(Order::getId, orderId)
                 .set(Order::getStatus, 2); // 2=已取消
-        orderMapper.update(null, wrapper);
-       orderMapper.updateById(order);
+        orderMapper.update(null, statusWrapper);
     }
 }
 

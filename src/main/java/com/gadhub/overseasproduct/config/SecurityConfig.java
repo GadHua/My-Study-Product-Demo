@@ -32,7 +32,9 @@ public class SecurityConfig {
                        "/api/v1/backend/user/register",
                                 "/api/v1/backend/user/login",
                                 "/api/v1/backend/order/**",
-                                "/api/v1/backend/product/**"
+                                "/api/v1/backend/product/**",
+                                "/api/v1/backend/cart/**",
+                                "/api/v1/backend/payment/**"
                         ).permitAll() // 注册接口公开
                         .anyRequest().authenticated()                         // 其他所有接口都必须登录
                 );
