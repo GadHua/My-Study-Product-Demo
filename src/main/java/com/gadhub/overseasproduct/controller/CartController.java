@@ -59,5 +59,12 @@ public class CartController {
         return Result.success("删除成功");
     }
 
+    @DeleteMapping("/clear")
+    public Result clearCart() {
+        Long userId = UserContextUtil.getCurrentUserId();
+        cartService.clearCart(userId);
+        return Result.success();
+    }
+
 
 }

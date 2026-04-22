@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum OrderStaus {
+public enum OrderStatus {
     UNPAID(0, "待支付"),
     PAID(1, "已支付"),
     CLOSED(2, "已取消"),

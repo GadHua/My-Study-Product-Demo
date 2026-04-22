@@ -12,6 +12,7 @@ import com.gadhub.overseasproduct.mapper.CartMapper;
 import com.gadhub.overseasproduct.mapper.ProductMapper;
 import com.gadhub.overseasproduct.service.CartService;
 import com.gadhub.overseasproduct.vo.CartVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class CartServiceImpl implements CartService {
     @Autowired
@@ -27,6 +29,21 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private CartMapper cartMapper;
+
+    @Override
+    public void clearCart(Long userId) {
+
+        if (userId == null){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        LambdaQueryWrapper<Cart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Cart::getUserId, userId);
+
+        cartMapper.delete(wrapper);
+        log.info("购物车清空成功, userId: {}", userId);
+
+    }
 
     @Override
     public void deleteCart(Long cartId, Long userId) {

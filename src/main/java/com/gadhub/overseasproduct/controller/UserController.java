@@ -1,6 +1,7 @@
 package com.gadhub.overseasproduct.controller;
 
 import com.gadhub.overseasproduct.common.result.Result;
+import com.gadhub.overseasproduct.dto.UpdateUserInfoDTO;
 import com.gadhub.overseasproduct.dto.UserLoginDTO;
 import com.gadhub.overseasproduct.dto.UserRegisterDTO;
 import com.gadhub.overseasproduct.service.UserService;
@@ -35,6 +36,13 @@ public class UserController {
         Long userId = UserContextUtil.getCurrentUserId();
         UserInfoVO userInfo = userService.getUserInfo(userId);
         return Result.success(userInfo);
+    }
+
+    @PutMapping("/info")
+    public Result updateUserInfo(@RequestBody @Valid UpdateUserInfoDTO dto) {
+        Long userId = UserContextUtil.getCurrentUserId();
+        userService.updateUserInfo(userId, dto);
+        return Result.success();
     }
 
 

@@ -18,6 +18,7 @@ import com.gadhub.overseasproduct.mapper.ProductMapper;
 import com.gadhub.overseasproduct.service.ProductService;
 import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.gadhub.overseasproduct.converter.ProductConverter;
@@ -26,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 public class ProductServicelmpl implements ProductService {
     @Autowired
@@ -37,12 +38,22 @@ public class ProductServicelmpl implements ProductService {
     private CategoryMapper categoryMapper;
 
     @Override
-    public Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize) {
+    public Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize,Long categoryId,String keyword) {
         // 创建分页对象
         Page<Product> page = new Page<>(pageNum, pageSize);
 
         // 构建查询条件（可以添加排序等）
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+
+        if (categoryId != null){
+            wrapper.eq(Product::getCategoryId, categoryId);
+
+        }
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Product::getName, keyword);
+        }
+
         wrapper.orderByDesc(Product::getCreatedAt);
 
         // 执行分页查询
@@ -70,7 +81,7 @@ public class ProductServicelmpl implements ProductService {
         // 用converter转换
         Product product = productConverter.toEntity(productDto);
         productMapper.insert(product);
-
+        log.info("商品添加成功, productName: {}", productDto.getName());
     }
 
     @Transactional
@@ -89,7 +100,7 @@ public class ProductServicelmpl implements ProductService {
         Product product = productConverter.toEntity(productDto);
 
         productMapper.updateById(product); // 对查询到的指定id进行更新
-
+        log.info("商品修改成功, productId: {}", productDto.getId());
     }
 
     @Override
@@ -130,6 +141,7 @@ public class ProductServicelmpl implements ProductService {
 
         // 删除指定id的商品
         productMapper.deleteById(id);
+        log.info("商品删除成功, productId: {}", id);
     }
 
 
@@ -150,6 +162,7 @@ public class ProductServicelmpl implements ProductService {
                 .set(Product::getStatus, ProductStatus.ON_SHELF.getCode());  // 0 = 上架
 
         productMapper.update(null, wrapper);
+        log.info("商品上架成功, productId: {}", id);
 
     }
 
@@ -170,5 +183,7 @@ public class ProductServicelmpl implements ProductService {
                 .set(Product::getStatus, ProductStatus.OFF_SHELF.getCode());   // 0 = 下架
 
         productMapper.update(null, wrapper);
+
+        log.info("商品下架成功, productId: {}", id);
     }
 }

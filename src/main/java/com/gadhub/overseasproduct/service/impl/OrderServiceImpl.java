@@ -4,6 +4,7 @@ package com.gadhub.overseasproduct.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gadhub.overseasproduct.common.constant.OrderStatus;
 import com.gadhub.overseasproduct.common.exception.BusinessException;
 import com.gadhub.overseasproduct.dto.CreateOrderDTO;
 import com.gadhub.overseasproduct.dto.OrderItemDTO;
@@ -79,7 +80,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setUserId(userId);
         order.setTotalAmount(totalAmount);
-        order.setStatus(0); // 0=待支付
+        order.setStatus(OrderStatus.UNPAID.getCode()); // 0=待支付
         orderMapper.insert(order);
 
         // 4. 创建订单明细
@@ -220,7 +221,7 @@ public class OrderServiceImpl implements OrderService {
            throw new BusinessException(ErrorCode.ORDER_NOT_BELONG_TO_USER);
        }
 
-       if (order.getStatus() != 0){ // 订单状态不是待付款
+       if (!(order.getStatus().equals(OrderStatus.UNPAID.getCode()))){ // 订单状态不是待付款
            throw new BusinessException(ErrorCode.ORDER_STATUS_ERROR);
        }
 
@@ -234,7 +235,7 @@ public class OrderServiceImpl implements OrderService {
 
        LambdaUpdateWrapper<Order> statusWrapper = new LambdaUpdateWrapper<>();
             statusWrapper.eq(Order::getId, orderId)
-                .set(Order::getStatus, 2); // 2=已取消
+                .set(Order::getStatus, OrderStatus.CLOSED.getCode()); // 2=已取消
         orderMapper.update(null, statusWrapper);
 
         log.info("订单取消成功, orderId: {}", orderId);

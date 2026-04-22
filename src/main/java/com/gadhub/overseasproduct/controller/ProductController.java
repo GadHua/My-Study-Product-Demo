@@ -45,9 +45,11 @@ public class ProductController {
     @GetMapping("/page")
     public Result getProductPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword
     ) {
-        Page<ProductListVO> page = productService.getProductPage(pageNum, pageSize);
+        Page<ProductListVO> page = productService.getProductPage(pageNum, pageSize, categoryId,keyword);
         return Result.success(page);
     }
 

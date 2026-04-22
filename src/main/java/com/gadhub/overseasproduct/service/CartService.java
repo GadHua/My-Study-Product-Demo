@@ -13,4 +13,6 @@ public interface CartService {
     void deleteCart(Long cartId, Long userId);
 
     void updateCart(Integer quantity, Long cartId , Long userId);
+
+    void clearCart(Long userId);
 }

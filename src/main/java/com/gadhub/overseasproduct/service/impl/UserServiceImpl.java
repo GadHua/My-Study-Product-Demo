@@ -1,4 +1,5 @@
 package com.gadhub.overseasproduct.service.impl;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -9,12 +10,16 @@ import com.gadhub.overseasproduct.entity.User;
 import com.gadhub.overseasproduct.mapper.UserMapper;
 import com.gadhub.overseasproduct.service.UserService;
 import com.gadhub.overseasproduct.util.JwtUtil;
+import com.gadhub.overseasproduct.dto.UpdateUserInfoDTO;
 import com.gadhub.overseasproduct.vo.UserInfoVO;
 import com.gadhub.overseasproduct.vo.UserLoginVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired  // 注入 Mapper
@@ -64,6 +69,61 @@ public class UserServiceImpl implements UserService {
 
         // 5. 保存到数据库
         userMapper.insert(user);
+    }
+
+    @Transactional
+    @Override
+    public void updateUserInfo(Long userId, UpdateUserInfoDTO updateUserInfoDTO) {
+        User user = userMapper.selectById(userId);
+        if (user == null){
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (updateUserInfoDTO.getEmail() != null && !updateUserInfoDTO.getEmail().equals(user.getEmail())) {
+            // 检查邮箱是否被其他用户使用
+            LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(User::getEmail, updateUserInfoDTO.getEmail())
+                    .ne(User::getId, userId);  // 排除当前用户
+            User existUser = userMapper.selectOne(queryWrapper);
+            if (existUser != null) {
+                throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+        }
+
+        if (updateUserInfoDTO.getNewPassword() != null) {
+            // 必须提供旧密码
+            if (updateUserInfoDTO.getOldPassword() == null) {
+                throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+            }
+
+            // 验证旧密码是否正确
+            if (!passwordEncoder.matches(updateUserInfoDTO.getOldPassword(), user.getPassword())) {
+                throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+            }
+
+            // 验证新密码格式
+            validatePassword(updateUserInfoDTO.getNewPassword());
+        }
+
+        LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(User::getId, userId);
+
+        if (updateUserInfoDTO.getNewUsername() != null) {
+            wrapper.set(User::getName, updateUserInfoDTO.getNewUsername());
+        }
+        if (updateUserInfoDTO.getEmail() != null) {
+            wrapper.set(User::getEmail, updateUserInfoDTO.getEmail());
+        }
+        if (updateUserInfoDTO.getNewPassword() != null) {
+            String encodedPassword = passwordEncoder.encode(updateUserInfoDTO.getNewPassword());
+            wrapper.set(User::getPassword, encodedPassword);
+        }
+
+        userMapper.update(null, wrapper);
+        log.info("用户信息更新成功, userId: {}", userId);
+
+
+
     }
 
     public UserLoginVO login(UserLoginDTO userLoginDTO){

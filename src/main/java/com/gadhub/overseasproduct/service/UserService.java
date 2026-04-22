@@ -2,6 +2,7 @@ package com.gadhub.overseasproduct.service;
 
 import com.gadhub.overseasproduct.dto.UserLoginDTO;
 import com.gadhub.overseasproduct.dto.UserRegisterDTO;
+import com.gadhub.overseasproduct.dto.UpdateUserInfoDTO;
 import com.gadhub.overseasproduct.vo.UserInfoVO;
 import com.gadhub.overseasproduct.vo.UserLoginVO;
 
@@ -11,4 +12,6 @@ public interface UserService {
     UserLoginVO login(UserLoginDTO userLoginDTO);
 
     UserInfoVO getUserInfo(Long userId);
+
+    void updateUserInfo(Long userId, UpdateUserInfoDTO updateUserInfoDTO);
 }
