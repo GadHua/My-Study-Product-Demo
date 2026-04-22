@@ -13,6 +13,7 @@ public class ProductDetailVO {
     private BigDecimal price;
     private Integer stock;
     private Long categoryId;
+    private String categoryName;
     private Integer status;
 
     private LocalDateTime createdAt;

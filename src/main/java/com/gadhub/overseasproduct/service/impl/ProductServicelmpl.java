@@ -50,6 +50,8 @@ public class ProductServicelmpl implements ProductService {
 
         }
 
+        wrapper.eq(Product::getStatus, ProductStatus.ON_SHELF.getCode());
+
         if (keyword != null && !keyword.trim().isEmpty()) {
             wrapper.like(Product::getName, keyword);
         }
@@ -120,7 +122,7 @@ public class ProductServicelmpl implements ProductService {
         if (product.getCategoryId() != null) {
             Category category = categoryMapper.selectById(product.getCategoryId());
             if (category != null) {
-                productDetailVO.setName(category.getName());
+                productDetailVO.setCategoryName(category.getName());
             }
         }
 

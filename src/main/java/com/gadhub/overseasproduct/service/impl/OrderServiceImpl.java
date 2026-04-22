@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gadhub.overseasproduct.common.constant.OrderStatus;
+import com.gadhub.overseasproduct.common.constant.ProductStatus;
 import com.gadhub.overseasproduct.common.exception.BusinessException;
 import com.gadhub.overseasproduct.dto.CreateOrderDTO;
 import com.gadhub.overseasproduct.dto.OrderItemDTO;
@@ -58,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
             }
 
-            if (!(product.getStatus()==1)){
+            if (product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())){
                 throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
             }
 
@@ -66,11 +67,16 @@ public class OrderServiceImpl implements OrderService {
                  throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
             }
 
+            // 扣减库存
+            product.setStock(product.getStock() - item.getQuantity());
 
-            LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Product::getId, product.getId())
-                    .setSql("stock = stock-"+item.getQuantity());
-            productMapper.update(null, updateWrapper);
+            // 使用 updateById 触发乐观锁
+            int rows = productMapper.updateById(product);
+
+            // 检查是否更新成功（乐观锁失败时 rows=0）
+            if (rows == 0) {
+                throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+            }
 
             // 累加总金额
             totalAmount = totalAmount.add(product.getPrice().multiply(new BigDecimal(item.getQuantity())));
@@ -227,10 +233,9 @@ public class OrderServiceImpl implements OrderService {
 
        List<OrderItem> orderItems = orderItemMapper.selectList(new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
         for (OrderItem item : orderItems) {
-            LambdaUpdateWrapper<Product> stockWrapper = new LambdaUpdateWrapper<>();
-            stockWrapper.eq(Product::getId, item.getProductId())
-                    .setSql("stock = stock + " + item.getQuantity());
-            productMapper.update(null, stockWrapper);
+            Product product = productMapper.selectById(item.getProductId());
+            product.setStock(product.getStock() + item.getQuantity());
+            productMapper.updateById(product);
         }
 
        LambdaUpdateWrapper<Order> statusWrapper = new LambdaUpdateWrapper<>();
