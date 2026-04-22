@@ -9,6 +9,7 @@ import com.gadhub.overseasproduct.entity.User;
 import com.gadhub.overseasproduct.mapper.UserMapper;
 import com.gadhub.overseasproduct.service.UserService;
 import com.gadhub.overseasproduct.util.JwtUtil;
+import com.gadhub.overseasproduct.vo.UserInfoVO;
 import com.gadhub.overseasproduct.vo.UserLoginVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -85,11 +86,25 @@ public class UserServiceImpl implements UserService {
         loginVO.setUserId(user.getId());
         loginVO.setUsername(user.getName());
         loginVO.setEmail(user.getEmail());
-        loginVO.setToken(JwtUtil.generateToken(user.getId()));
+        loginVO.setToken(JwtUtil.generateToken(user.getId().toString()));
         return loginVO;
 
     }
 
+    @Override
+    public UserInfoVO getUserInfo(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user==null){
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setId(userId);
+        userInfoVO.setUsername(user.getName());
+        userInfoVO.setEmail(user.getEmail());
+        userInfoVO.setCreateTime(user.getCreateTime());
+
+        return userInfoVO;
+    }
 
 
     private void validateEmail(String email) {

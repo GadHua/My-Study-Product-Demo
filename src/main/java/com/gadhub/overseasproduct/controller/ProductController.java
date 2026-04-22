@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.ProductDto;
 import com.gadhub.overseasproduct.service.ProductService;
+import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ public class ProductController {
 
     @PutMapping("/{id}") // 修改商品
     public Result updateProduct(@PathVariable Long id,@RequestBody @Valid ProductDto productDto) {
+        productDto.setId(id);
         productService.updateProduct(productDto);
         return Result.success();
     }
@@ -32,6 +34,13 @@ public class ProductController {
         productService.deleteProduct(id);
         return Result.success();
     }
+
+    @GetMapping("/{id}")
+    public Result getProductDetail(@PathVariable Long id) {
+        ProductDetailVO productDetail = productService.getProductDetail(id);
+        return Result.success(productDetail);
+    }
+
 
     @GetMapping("/page")
     public Result getProductPage(

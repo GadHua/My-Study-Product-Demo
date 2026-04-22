@@ -4,6 +4,7 @@ import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.AddToCartDTO;
 import com.gadhub.overseasproduct.dto.UpdateCartDTO;
 import com.gadhub.overseasproduct.service.CartService;
+import com.gadhub.overseasproduct.util.UserContextUtil;
 import com.gadhub.overseasproduct.vo.CartVO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,8 @@ public class CartController {
     // 添加商品到购物车
     @PostMapping("/add")
     public Result addToCart(@RequestBody @Valid AddToCartDTO addToCartDTO) {
-        // TODO: 获取当前登录用户的ID
-        Long userId = 1L; // 暂时写死
+
+        Long userId = UserContextUtil.getCurrentUserId();
 
         cartService.addToCart(addToCartDTO, userId);
         return Result.success("添加成功");
@@ -31,8 +32,8 @@ public class CartController {
     // 查询购物车列表
     @GetMapping("/list")
     public Result getCartList() {
-        // TODO: 获取当前登录用户的ID
-        Long userId = 1L; // 暂时写死
+
+        Long userId = UserContextUtil.getCurrentUserId();
 
         List<CartVO> cartList = cartService.getCartList(userId);
         return Result.success(cartList);
@@ -41,8 +42,8 @@ public class CartController {
     // 更新购物车商品数量
     @PutMapping("/update")
     public Result updateCartItem(@RequestBody @Valid UpdateCartDTO updateCartDTO) {
-        // TODO: 获取当前登录用户的ID
-        Long userId = 1L; // 暂时写死
+
+        Long userId = UserContextUtil.getCurrentUserId();
 
         cartService.updateCart(updateCartDTO.getQuantity(), updateCartDTO.getCartId(), userId);
         return Result.success("更新成功");
@@ -51,8 +52,8 @@ public class CartController {
     // 删除购物车商品
     @DeleteMapping("/{cartId}")
     public Result deleteCartItem(@PathVariable Long cartId) {
-        // TODO: 获取当前登录用户的ID
-        Long userId = 1L; // 暂时写死
+
+        Long userId = UserContextUtil.getCurrentUserId();
 
         cartService.deleteCart(cartId, userId);
         return Result.success("删除成功");

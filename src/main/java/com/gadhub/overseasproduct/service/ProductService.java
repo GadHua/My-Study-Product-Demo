@@ -2,6 +2,7 @@ package com.gadhub.overseasproduct.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gadhub.overseasproduct.dto.ProductDto;
+import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
 
 
@@ -14,6 +15,8 @@ public interface ProductService {
     void deleteProduct(Long id); // 删除商品
 
     Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize);
+
+    ProductDetailVO getProductDetail(Long id);
 
     void onShelf(Long id);
     void offShelf(Long id);

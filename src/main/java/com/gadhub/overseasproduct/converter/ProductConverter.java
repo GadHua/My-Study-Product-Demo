@@ -2,6 +2,7 @@ package com.gadhub.overseasproduct.converter;
 
 import com.gadhub.overseasproduct.dto.ProductDto;
 import com.gadhub.overseasproduct.entity.Product;
+import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,4 +16,5 @@ public interface ProductConverter {
     Product toEntity(ProductDto productDto);
     ProductListVO toListVO(Product product);
     ProductDto toDto(Product product);
+    ProductDetailVO toDetailVO(Product product);
 }

@@ -4,12 +4,11 @@ import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.UserLoginDTO;
 import com.gadhub.overseasproduct.dto.UserRegisterDTO;
 import com.gadhub.overseasproduct.service.UserService;
+import com.gadhub.overseasproduct.util.UserContextUtil;
+import com.gadhub.overseasproduct.vo.UserInfoVO;
 import com.gadhub.overseasproduct.vo.UserLoginVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 
@@ -30,5 +29,13 @@ public class UserController {
         UserLoginVO loginVO = userService.login(dto);
         return Result.success(loginVO);
     }
+
+    @GetMapping("/info")
+    public Result getUserInfo() {
+        Long userId = UserContextUtil.getCurrentUserId();
+        UserInfoVO userInfo = userService.getUserInfo(userId);
+        return Result.success(userInfo);
+    }
+
 
 }

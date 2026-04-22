@@ -17,6 +17,7 @@ public enum ErrorCode {
     PASSWORD_TOO_SHORT(10005, "密码长度不能少于8位"),
     PASSWORD_FORMAT_ERROR(10006, "密码必须包含字母和数字"),
     LOGIN_FAILED(10007, "用户名或者密码错误"),
+    USER_NOT_FOUND(10008, "用户不存在"),
 
     // 商品相关错误 11000-11999
     PRODUCT_NOT_FOUND(11001, "商品不存在"),
@@ -42,6 +43,8 @@ public enum ErrorCode {
     PAYMENT_ORDER_NOT_BELONG_TO_USER(14003, "订单不属于当前用户"),
     UNSUPPORTED_PAYMENT_METHODS(14004, "不支持的支付方式"),
 
+    // 认证授权相关错误 15000-15999
+    UNAUTHORIZED(15001, "用户未登录或Token无效"),
     // 系统错误 50000-50999
     SYSTEM_ERROR(50000, "系统异常");
 

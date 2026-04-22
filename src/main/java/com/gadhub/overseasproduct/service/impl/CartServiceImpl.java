@@ -3,6 +3,7 @@ package com.gadhub.overseasproduct.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
+import com.gadhub.overseasproduct.common.constant.ProductStatus;
 import com.gadhub.overseasproduct.common.exception.BusinessException;
 import com.gadhub.overseasproduct.dto.AddToCartDTO;
 import com.gadhub.overseasproduct.entity.Cart;
@@ -13,6 +14,7 @@ import com.gadhub.overseasproduct.service.CartService;
 import com.gadhub.overseasproduct.vo.CartVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ public class CartServiceImpl implements CartService {
         cartMapper.delete(queryWrapper);
     }
 
+    @Transactional
     @Override
     public void updateCart(Integer quantity, Long cartId,Long userId) {
         if (quantity <= 0){
@@ -55,6 +58,17 @@ public class CartServiceImpl implements CartService {
         if (cart == null){
             throw new BusinessException(ErrorCode.CART_NOT_FOUND);
         }
+
+        Product product = productMapper.selectById(cart.getProductId());
+
+        if (!product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())) {
+            throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
+        }
+
+        if (!(product.getStock()>=quantity)){
+            throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+        }
+
 
         LambdaUpdateWrapper<Cart> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Cart::getId, cartId)
@@ -92,20 +106,32 @@ public class CartServiceImpl implements CartService {
         return cartVOList;
     }
 
+    // 添加商品到购物车
+    @Transactional
     @Override
     public void addToCart(AddToCartDTO addToCartDTO, Long userId) {
-        if (userId == null){
+        if (userId == null){ // 判断用户是否登录
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-        }
-
-        Product product = productMapper.selectById(addToCartDTO.getProductId());
-        if (product == null) {  // 判断商品是否存在
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
         if (!(addToCartDTO.getQuantity()>0)){
             throw new BusinessException(ErrorCode.CART_QUANTITY_INVALID);
         }
+
+        Product product = productMapper.selectById(addToCartDTO.getProductId());
+
+        if (product == null) {  // 判断商品是否存在
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        if (!product.getStatus().equals(ProductStatus.ON_SHELF.getCode())){ //判断有没有上架
+            throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
+        }
+
+        if (!(product.getStock()>=addToCartDTO.getQuantity())){
+            throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+        }
+
 
         LambdaQueryWrapper<Cart> queryWrapper = new LambdaQueryWrapper<>();
 

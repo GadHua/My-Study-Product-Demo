@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @TableName("user")
 public class User {
     @TableId
-    private String id;
+    private Long id;
 
     @TableField("username")
     private String name;

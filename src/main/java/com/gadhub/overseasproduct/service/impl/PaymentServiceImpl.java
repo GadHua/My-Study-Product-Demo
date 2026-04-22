@@ -9,11 +9,13 @@ import com.gadhub.overseasproduct.entity.Payment;
 import com.gadhub.overseasproduct.mapper.OrderMapper;
 import com.gadhub.overseasproduct.mapper.PaymentMapper;
 import com.gadhub.overseasproduct.service.PaymentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
     @Autowired
@@ -24,6 +26,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void payOrder(Long orderId, Long userId) {
+        log.info("开始支付订单, orderId: {}, userId: {}", orderId, userId);
+
         LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
         orderWrapper.eq(Order::getId, orderId)
                 .eq(Order::getUserId, userId);
@@ -57,6 +61,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .set(Order::getPayTime, LocalDateTime.now());
 
             orderMapper.update(null, orderUpdateWrapper);
+
         }else{
             // 3. 创建支付记录（待支付）
             Payment payment = new Payment();
@@ -82,6 +87,8 @@ public class PaymentServiceImpl implements PaymentService {
             orderMapper.update(null, orderUpdateWrapper);
 
         }
+        log.info("订单支付成功, orderId: {}, amount: {}", orderId, order.getTotalAmount());
+
 
     }
 }

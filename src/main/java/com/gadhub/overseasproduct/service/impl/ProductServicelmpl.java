@@ -7,16 +7,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gadhub.overseasproduct.common.constant.ErrorCode;
 import com.gadhub.overseasproduct.common.constant.ProductStatus;
 import com.gadhub.overseasproduct.common.exception.BusinessException;
 import com.gadhub.overseasproduct.dto.ProductDto;
+import com.gadhub.overseasproduct.entity.Category;
 import com.gadhub.overseasproduct.entity.Product;
+import com.gadhub.overseasproduct.mapper.CategoryMapper;
 import com.gadhub.overseasproduct.mapper.ProductMapper;
 import com.gadhub.overseasproduct.service.ProductService;
+import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.gadhub.overseasproduct.converter.ProductConverter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +33,8 @@ public class ProductServicelmpl implements ProductService {
     private ProductMapper productMapper;
     @Autowired
     private ProductConverter productConverter;
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     @Override
     public Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize) {
@@ -57,6 +64,7 @@ public class ProductServicelmpl implements ProductService {
         return voPage;
     }
 
+    @Transactional
     @Override // 添加商品
     public void addProduct(ProductDto productDto) {
         // 用converter转换
@@ -65,6 +73,7 @@ public class ProductServicelmpl implements ProductService {
 
     }
 
+    @Transactional
     @Override // 修改商品
     public void updateProduct(ProductDto productDto) {
         if (productDto.getId()==null){ // 判断商品id是否为空
@@ -83,6 +92,31 @@ public class ProductServicelmpl implements ProductService {
 
     }
 
+    @Override
+    public ProductDetailVO getProductDetail(Long id) {
+        if (id==null){
+            throw new BusinessException(PRODUCT_ID_REQUIRED);
+        }
+
+        Product product = productMapper.selectById(id);
+        if (product==null){
+            throw new BusinessException(PRODUCT_NOT_FOUND);
+        }
+
+        ProductDetailVO productDetailVO = productConverter.toDetailVO(product);
+
+
+        if (product.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(product.getCategoryId());
+            if (category != null) {
+                productDetailVO.setName(category.getName());
+            }
+        }
+
+        return productDetailVO;
+    }
+
+    @Transactional
     @Override // 删除商品
     public void deleteProduct(Long id) {
         if (id==null){ // 判断商品id是否为空
@@ -99,6 +133,7 @@ public class ProductServicelmpl implements ProductService {
     }
 
 
+    @Transactional
     @Override
     public void onShelf(Long id) {
         if (id==null){ // 判断商品id是否为空
@@ -118,6 +153,7 @@ public class ProductServicelmpl implements ProductService {
 
     }
 
+    @Transactional
     @Override
     public void offShelf(Long id) {
         if (id==null){ // 判断商品id是否为空

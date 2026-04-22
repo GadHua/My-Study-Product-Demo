@@ -16,6 +16,7 @@ import com.gadhub.overseasproduct.mapper.ProductMapper;
 import com.gadhub.overseasproduct.service.OrderService;
 import com.gadhub.overseasproduct.vo.OrderItemVO;
 import com.gadhub.overseasproduct.vo.OrderVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ import java.util.List;
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
-
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -45,6 +46,8 @@ public class OrderServiceImpl implements OrderService {
         // 1. 获取商品列表
         List<OrderItemDTO> items = createOrderDTO.getItems();
 
+        log.info("开始创建订单, userId: {}, 商品数量: {}", userId, items.size());
+
         // 2. 计算总金额
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderItemDTO item : items) {
@@ -57,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
             if (!(product.getStatus()==1)){
                 throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
             }
-            // TODO: 在这里添加库存验证和扣减
+
             if(product.getStock() < item.getQuantity()){
                  throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
             }
@@ -92,6 +95,7 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setQuantity(item.getQuantity());
             orderItemMapper.insert(orderItem);
         }
+        log.info("订单创建成功, orderId: {}, userId: {}, totalAmount: {}", orderId, userId, totalAmount);
 
         return orderId;
     }
@@ -200,7 +204,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void cancelOrder(Long orderId, Long userId) {
-       if (orderId == null){ //有没有订单ID
+
+        log.info("开始取消订单, orderId: {}, userId: {}", orderId, userId);
+
+        if (orderId == null){ //有没有订单ID
            throw new BusinessException(ErrorCode.ORDER_ID_REQUIRED);
        }
 
@@ -229,6 +236,8 @@ public class OrderServiceImpl implements OrderService {
             statusWrapper.eq(Order::getId, orderId)
                 .set(Order::getStatus, 2); // 2=已取消
         orderMapper.update(null, statusWrapper);
+
+        log.info("订单取消成功, orderId: {}", orderId);
     }
 }
 
