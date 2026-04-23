@@ -1,17 +1,20 @@
 package com.gadhub.overseasproduct.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gadhub.overseasproduct.common.annotation.RateLimit;
 import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.CreateOrderDTO;
 import com.gadhub.overseasproduct.service.OrderService;
 import com.gadhub.overseasproduct.util.UserContextUtil;
 import com.gadhub.overseasproduct.vo.OrderVO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/backend/order")
+@Tag(name = "订单管理")
 public class OrderController {
 
     @Autowired
@@ -19,6 +22,7 @@ public class OrderController {
 
     // 创建订单
     @PostMapping("/create")
+    @RateLimit(time = 60, count = 10)
     public Result createOrder(@RequestBody @Valid CreateOrderDTO createOrderDTO) {
 
         Long userId = UserContextUtil.getCurrentUserId();
@@ -36,6 +40,7 @@ public class OrderController {
 
     // 分页查询订单列表
     @GetMapping("/page")
+    @RateLimit(time = 60, count = 30)
     public Result getOrderPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize

@@ -15,6 +15,7 @@ public class ProductDetailVO {
     private Long categoryId;
     private String categoryName;
     private Integer status;
+    private String imageUrl; // 商品图片URL
 
     private LocalDateTime createdAt;
 

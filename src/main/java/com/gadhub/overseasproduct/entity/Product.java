@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Data
@@ -29,6 +30,12 @@ public class Product {
 
     @TableField("status")
     private Integer status; // 商品状态 1: 下架 0: 上架
+
+    @TableField("sales")
+    private Integer sales; // 商品销量
+
+    @TableField("image_url")
+    private String imageUrl;
 
     @Version
     private Integer version; // 版本号

@@ -14,5 +14,6 @@ public class ProductListVO {
     private Integer stock;
     private Long categoryId;
     private Integer status;
+    private String imageUrl; // 商品图片URL
     private LocalDateTime createdAt;
 }

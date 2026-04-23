@@ -9,6 +9,7 @@ import com.gadhub.overseasproduct.dto.UserRegisterDTO;
 import com.gadhub.overseasproduct.entity.User;
 import com.gadhub.overseasproduct.mapper.UserMapper;
 import com.gadhub.overseasproduct.service.UserService;
+import com.gadhub.overseasproduct.util.DesensitizationUtil;
 import com.gadhub.overseasproduct.util.JwtUtil;
 import com.gadhub.overseasproduct.dto.UpdateUserInfoDTO;
 import com.gadhub.overseasproduct.vo.UserInfoVO;
@@ -141,11 +142,14 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.LOGIN_FAILED);
         }
 
-//        验证通过 拿数据赋值返回
+        //  验证通过 拿数据赋值返回
         UserLoginVO loginVO = new UserLoginVO();
         loginVO.setUserId(user.getId());
-        loginVO.setUsername(user.getName());
-        loginVO.setEmail(user.getEmail());
+
+        loginVO.setUsername(DesensitizationUtil.maskUsername(user.getName()));
+
+        loginVO.setEmail(DesensitizationUtil.maskEmail(user.getEmail()));
+
         loginVO.setToken(JwtUtil.generateToken(user.getId().toString()));
         return loginVO;
 
@@ -159,8 +163,11 @@ public class UserServiceImpl implements UserService {
         }
         UserInfoVO userInfoVO = new UserInfoVO();
         userInfoVO.setId(userId);
-        userInfoVO.setUsername(user.getName());
-        userInfoVO.setEmail(user.getEmail());
+
+        userInfoVO.setUsername(DesensitizationUtil.maskUsername(user.getName()));
+
+        userInfoVO.setEmail(DesensitizationUtil.maskEmail(user.getEmail()));
+
         userInfoVO.setCreateTime(user.getCreateTime());
 
         return userInfoVO;

@@ -32,4 +32,7 @@ public class ProductDto {
 
     private Integer status; // 商品状态
 
+    private String imageUrl; // 商品图片URL
+
+
 }

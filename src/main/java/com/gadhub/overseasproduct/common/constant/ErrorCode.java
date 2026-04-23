@@ -36,6 +36,8 @@ public enum ErrorCode {
     CART_QUANTITY_INVALID(13002, "数量必须大于0"),
     PRODUCT_ALREADY_IN_CART(13003, "商品已存在购物车中"),
     CART_NOT_FOUND(13004, "购物车不存在"),
+    CART_ITEM_QUANTITY_EXCEED_LIMIT(13005, "购物车商品数量不能超过99件"),
+
 
     // 支付相关错误 14000-14999
     PAYMENT_ORDER_NOT_FOUND(14001, "订单不存在"),
@@ -45,6 +47,11 @@ public enum ErrorCode {
 
     // 认证授权相关错误 15000-15999
     UNAUTHORIZED(15001, "用户未登录或Token无效"),
+
+    // 限流相关错误 16000-16999
+    RATE_LIMIT_EXCEEDED(16001, "请求过于频繁，请稍后再试"),
+
+
     // 系统错误 50000-50999
     SYSTEM_ERROR(50000, "系统异常");
 

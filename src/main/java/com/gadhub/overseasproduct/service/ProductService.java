@@ -14,7 +14,7 @@ public interface ProductService {
 
     void deleteProduct(Long id); // 删除商品
 
-    Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize,Long categoryId,String keyword);
+    Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize,Long categoryId,String keyword,String sortBy, String order);
 
     ProductDetailVO getProductDetail(Long id);
 

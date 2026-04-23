@@ -1,17 +1,20 @@
 package com.gadhub.overseasproduct.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gadhub.overseasproduct.common.annotation.RateLimit;
 import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.ProductDto;
 import com.gadhub.overseasproduct.service.ProductService;
 import com.gadhub.overseasproduct.vo.ProductDetailVO;
 import com.gadhub.overseasproduct.vo.ProductListVO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/backend/product")
+@Tag(name = "商品管理")
 public class ProductController {
     @Autowired
     private ProductService productService;
@@ -43,18 +46,18 @@ public class ProductController {
 
 
     @GetMapping("/page")
+    @RateLimit(time = 60, count = 30)
     public Result getProductPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "desc") String order
     ) {
-        Page<ProductListVO> page = productService.getProductPage(pageNum, pageSize, categoryId,keyword);
+        Page<ProductListVO> page = productService.getProductPage(pageNum, pageSize, categoryId,keyword,sortBy,order);
         return Result.success(page);
     }
-
-
-
 
     // 上架
     @PutMapping("/{id}/onShelf")

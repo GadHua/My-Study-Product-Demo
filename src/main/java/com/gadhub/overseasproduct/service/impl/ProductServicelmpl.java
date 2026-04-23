@@ -38,7 +38,7 @@ public class ProductServicelmpl implements ProductService {
     private CategoryMapper categoryMapper;
 
     @Override
-    public Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize,Long categoryId,String keyword) {
+    public Page<ProductListVO> getProductPage(Integer pageNum, Integer pageSize,Long categoryId,String keyword,String sortBy,String order) {
         // 创建分页对象
         Page<Product> page = new Page<>(pageNum, pageSize);
 
@@ -56,7 +56,41 @@ public class ProductServicelmpl implements ProductService {
             wrapper.like(Product::getName, keyword);
         }
 
-        wrapper.orderByDesc(Product::getCreatedAt);
+        // 动态排序
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            boolean isAsc = "asc".equalsIgnoreCase(order);
+
+            switch (sortBy.toLowerCase()) {
+                case "price":
+                    if (isAsc) {
+                        wrapper.orderByAsc(Product::getPrice);
+                    } else {
+                        wrapper.orderByDesc(Product::getPrice);
+                    }
+                    break;
+                case "sales":
+                    if (isAsc) {
+                        wrapper.orderByAsc(Product::getSales);
+                    } else {
+                        wrapper.orderByDesc(Product::getSales);
+                    }
+                    break;
+                case "created_at":
+                case "createdAt":
+                    if (isAsc) {
+                        wrapper.orderByAsc(Product::getCreatedAt);
+                    } else {
+                        wrapper.orderByDesc(Product::getCreatedAt);
+                    }
+                    break;
+                default:
+                    // 默认排序：按创建时间降序
+                    wrapper.orderByDesc(Product::getCreatedAt);
+            }
+        } else {
+            // 默认排序：按创建时间降序
+            wrapper.orderByDesc(Product::getCreatedAt);
+        }
 
         // 执行分页查询
         Page<Product> productPage = productMapper.selectPage(page, wrapper);

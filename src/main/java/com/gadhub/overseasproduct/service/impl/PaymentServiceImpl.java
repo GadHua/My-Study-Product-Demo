@@ -5,15 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
 import com.gadhub.overseasproduct.common.exception.BusinessException;
 import com.gadhub.overseasproduct.entity.Order;
+import com.gadhub.overseasproduct.entity.OrderItem;
 import com.gadhub.overseasproduct.entity.Payment;
+import com.gadhub.overseasproduct.entity.Product;
+import com.gadhub.overseasproduct.mapper.OrderItemMapper;
 import com.gadhub.overseasproduct.mapper.OrderMapper;
 import com.gadhub.overseasproduct.mapper.PaymentMapper;
+import com.gadhub.overseasproduct.mapper.ProductMapper;
 import com.gadhub.overseasproduct.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -22,8 +28,15 @@ public class PaymentServiceImpl implements PaymentService {
     private PaymentMapper paymentMapper;
 
     @Autowired
+    private ProductMapper productMapper;
+
+    @Autowired
     private OrderMapper orderMapper;
 
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+
+    @Transactional
     @Override
     public void payOrder(Long orderId, Long userId) {
         log.info("开始支付订单, orderId: {}, userId: {}", orderId, userId);
@@ -87,8 +100,37 @@ public class PaymentServiceImpl implements PaymentService {
             orderMapper.update(null, orderUpdateWrapper);
 
         }
+        updateProductSales(orderId);
         log.info("订单支付成功, orderId: {}, amount: {}", orderId, order.getTotalAmount());
 
 
     }
+
+    /**
+     * 更新订单中商品的销量
+     */
+    private void updateProductSales(Long orderId) {
+        // 查询订单明细
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId)
+        );
+
+        for (OrderItem item : orderItems) {
+            // 查询商品
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null) {
+                // 累加销量
+                if (product.getSales() == null){
+                    product.setSales(item.getQuantity());
+                }else {
+                    product.setSales(product.getSales() + item.getQuantity());
+                }
+
+                productMapper.updateById(product);  // 使用乐观锁
+            }
+        }
+
+        log.info("商品销量更新成功, orderId: {}", orderId);
+    }
+
 }

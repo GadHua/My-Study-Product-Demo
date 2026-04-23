@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public Result<?> handleBusinessException(BusinessException e) {
-        log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
+        log.warn("业务异常 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
         // 返回带错误码的结果
     }
@@ -31,16 +31,23 @@ public class GlobalExceptionHandler {
         // 返回第一个错误信息（或者返回所有错误）
         String message = errors.values().iterator().next();
 
-        log.warn("参数校验失败: {}", message);
+        log.warn("参数校验失败 - 错误详情: {}", errors);
 
         return Result.error(400, message);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public Result<?> handleRuntimeException(RuntimeException e) {
-        log.error("系统运行时异常", e);
+        log.error("系统运行时异常 - 消息: {}", e.getMessage(), e);
 
-        return Result.error(e.getMessage());
+        return Result.error("系统异常，请联系管理员");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Result<?> handleException(Exception e) {
+        // 捕获所有未预期的异常
+        log.error("未知异常 - 消息: {}", e.getMessage(), e);
+        return Result.error("系统异常，请联系管理员");
     }
 
 

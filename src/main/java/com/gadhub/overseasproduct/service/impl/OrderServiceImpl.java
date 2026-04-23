@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -207,6 +208,56 @@ public class OrderServiceImpl implements OrderService {
         voPage.setRecords(voList);
         return voPage;
     }
+
+    @Override
+    @Transactional
+    public void cancelTimeoutOrders() {
+        // 计算30分钟前的时间
+        LocalDateTime timeoutThreshold = LocalDateTime.now().minusMinutes(30);
+
+        // 查询超时未支付的订单
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Order::getStatus, OrderStatus.UNPAID.getCode())
+                .lt(Order::getCreatedAt, timeoutThreshold);
+
+        List<Order> timeoutOrders = orderMapper.selectList(wrapper);
+
+        if (timeoutOrders.isEmpty()) {
+            return;
+        }
+
+        log.info("发现 {} 个超时未支付订单，开始自动取消", timeoutOrders.size());
+
+        for (Order order : timeoutOrders) {
+            try {
+                // 恢复库存
+                List<OrderItem> orderItems = orderItemMapper.selectList(
+                        new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId())
+                );
+
+                for (OrderItem item : orderItems) {
+                    Product product = productMapper.selectById(item.getProductId());
+                    if (product != null) {
+                        product.setStock(product.getStock() + item.getQuantity());
+                        productMapper.updateById(product);
+                    }
+                }
+
+                // 更新订单状态为已取消
+                LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
+                updateWrapper.eq(Order::getId, order.getId())
+                        .set(Order::getStatus, OrderStatus.CLOSED.getCode());
+                orderMapper.update(null, updateWrapper);
+
+                log.info("订单自动取消成功, orderId: {}", order.getId());
+            } catch (Exception e) {
+                log.error("订单自动取消失败, orderId: {}, error: {}", order.getId(), e.getMessage());
+            }
+        }
+
+        log.info("超时订单自动取消完成，共处理 {} 个订单", timeoutOrders.size());
+    }
+
 
     @Transactional
     @Override

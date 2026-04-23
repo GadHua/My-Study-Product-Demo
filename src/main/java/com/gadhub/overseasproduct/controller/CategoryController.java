@@ -4,6 +4,7 @@ import com.gadhub.overseasproduct.common.result.Result;
 import com.gadhub.overseasproduct.dto.CategoryDto;
 import com.gadhub.overseasproduct.service.CategoryService;
 import com.gadhub.overseasproduct.vo.CategoryTreeVO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/backend/category")
+@Tag(name = "分类管理")
 public class CategoryController {
 
     @Autowired

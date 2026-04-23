@@ -24,6 +24,10 @@ import java.util.List;
 @Slf4j
 @Service
 public class CartServiceImpl implements CartService {
+
+    // 购物车单个商品最大数量
+    private static final int MAX_CART_ITEM_QUANTITY = 99;
+
     @Autowired
     private ProductMapper productMapper;
 
@@ -66,6 +70,10 @@ public class CartServiceImpl implements CartService {
             throw new BusinessException(ErrorCode.CART_QUANTITY_INVALID);
         }
 
+        if (quantity > MAX_CART_ITEM_QUANTITY){
+            throw new BusinessException(ErrorCode.CART_ITEM_QUANTITY_EXCEED_LIMIT);
+        }
+
         LambdaQueryWrapper<Cart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Cart::getId, cartId)
                 .eq(Cart::getUserId, userId);
@@ -85,7 +93,6 @@ public class CartServiceImpl implements CartService {
         if (!(product.getStock()>=quantity)){
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
-
 
         LambdaUpdateWrapper<Cart> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Cart::getId, cartId)
@@ -135,6 +142,10 @@ public class CartServiceImpl implements CartService {
             throw new BusinessException(ErrorCode.CART_QUANTITY_INVALID);
         }
 
+        if (addToCartDTO.getQuantity() > MAX_CART_ITEM_QUANTITY){
+            throw new BusinessException(ErrorCode.CART_ITEM_QUANTITY_EXCEED_LIMIT);
+        }
+
         Product product = productMapper.selectById(addToCartDTO.getProductId());
 
         if (product == null) {  // 判断商品是否存在
@@ -158,6 +169,11 @@ public class CartServiceImpl implements CartService {
         Cart duplicateProducts = cartMapper.selectOne(queryWrapper);
 
         if (duplicateProducts != null){
+            int newQuantity = duplicateProducts.getQuantity() + addToCartDTO.getQuantity();
+            if (newQuantity > MAX_CART_ITEM_QUANTITY){
+                throw new BusinessException(ErrorCode.CART_ITEM_QUANTITY_EXCEED_LIMIT);
+            }
+
             LambdaUpdateWrapper<Cart> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(Cart::getId, duplicateProducts.getId())
                     .setSql("quantity = quantity + " + addToCartDTO.getQuantity());
