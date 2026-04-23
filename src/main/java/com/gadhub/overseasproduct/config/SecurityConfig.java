@@ -32,15 +32,15 @@ public class SecurityConfig {
                         .requestMatchers(
                        "/api/v1/backend/user/register",
                                 "/api/v1/backend/user/login",
-                                "/api/v1/backend/order/**",
+//                                "/api/v1/backend/order/**",
                                 "/api/v1/backend/product/**",
-                                "/api/v1/backend/cart/**",
-                                "/api/v1/backend/payment/**",
+//                                "/api/v1/backend/cart/**",
+//                                "/api/v1/backend/payment/**",
                                 //  swagger
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api-docs/**"
+//                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+//                                "/api-docs/**"
                         ).permitAll() // 注册接口公开
                         .anyRequest().authenticated()                         // 其他所有接口都必须登录
                 );
