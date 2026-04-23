@@ -22,6 +22,12 @@ spring:
       timeout: 5000ms
 
 
+# JWT配置
+jwt:
+  secret: OverseasProductSecretKey2026ForJWTTokenGenerationAndValidation
+  expiration: 86400000
+  header: Authorization
+  prefix: "Bearer "
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml

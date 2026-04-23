@@ -37,7 +37,12 @@ public enum ErrorCode {
     PRODUCT_ALREADY_IN_CART(13003, "商品已存在购物车中"),
     CART_NOT_FOUND(13004, "购物车不存在"),
     CART_ITEM_QUANTITY_EXCEED_LIMIT(13005, "购物车商品数量不能超过99件"),
-
+    CATEGORY_PARENT_NOT_FOUND(13006, "父级分类不存在"),
+    CATEGORY_ID_REQUIRED(13007, "分类ID不能为空"),
+    CATEGORY_CIRCULAR_REFERENCE(13008, "不能将分类设置为自己的子分类"),
+    CATEGORY_HAS_CHILDREN(13009, "该分类下有子分类，无法删除"),
+    CATEGORY_HAS_PRODUCTS(13010, "该分类下有商品，无法删除"),
+    CATEGORY_NOT_FOUND(13011, "分类不存在"),
 
     // 支付相关错误 14000-14999
     PAYMENT_ORDER_NOT_FOUND(14001, "订单不存在"),

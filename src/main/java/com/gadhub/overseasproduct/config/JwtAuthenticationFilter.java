@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -13,8 +15,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -22,28 +28,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. 从请求头获取 Token
-        String header = request.getHeader(JwtUtil.HEADER_STRING);
+        String header = request.getHeader(jwtUtil.getHeaderName());
 
-        // 2. 验证 Token 格式
-        if (header != null && header.startsWith(JwtUtil.TOKEN_PREFIX)) {
-            String token = header.replace(JwtUtil.TOKEN_PREFIX, "");
+        if (header != null && header.startsWith(jwtUtil.getTokenPrefix())) {
+            String token = header.replace(jwtUtil.getTokenPrefix(), "");
 
-            // 3. 验证 Token 是否有效
-            if (JwtUtil.validateToken(token)) {
-                // 4. 解析用户ID
-                String userId = JwtUtil.getUserIdFromToken(token);
+            if (jwtUtil.validateToken(token)) {
+                String userId = jwtUtil.getUserIdFromToken(token);
 
-                // 5. 创建认证对象
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
 
-                // 6. 存入 Security 上下文
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("用户认证成功, userId: {}", userId);
+            } else {
+                log.warn("JWT Token验证失败");
             }
         }
 
-        // 7. 继续过滤链
         filterChain.doFilter(request, response);
     }
 }

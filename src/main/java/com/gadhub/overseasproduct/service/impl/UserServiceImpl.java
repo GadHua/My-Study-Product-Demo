@@ -26,6 +26,9 @@ public class UserServiceImpl implements UserService {
     @Autowired  // 注入 Mapper
     private UserMapper userMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
@@ -150,7 +153,7 @@ public class UserServiceImpl implements UserService {
 
         loginVO.setEmail(DesensitizationUtil.maskEmail(user.getEmail()));
 
-        loginVO.setToken(JwtUtil.generateToken(user.getId().toString()));
+        loginVO.setToken(jwtUtil.generateToken(user.getId().toString()));
         return loginVO;
 
     }

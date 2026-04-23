@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -61,6 +63,8 @@ public class CartServiceImpl implements CartService {
         }
 
         cartMapper.delete(queryWrapper);
+        log.info("删除购物车商品成功, cartId: {}, userId: {}", cartId, userId);
+
     }
 
     @Transactional
@@ -85,12 +89,15 @@ public class CartServiceImpl implements CartService {
         }
 
         Product product = productMapper.selectById(cart.getProductId());
+        if (product == null){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
 
-        if (!product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())) {
+        if (product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())) {
             throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
         }
 
-        if (!(product.getStock()>=quantity)){
+        if (product.getStock() < quantity){
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
 
@@ -98,6 +105,9 @@ public class CartServiceImpl implements CartService {
         updateWrapper.eq(Cart::getId, cartId)
                 .set(Cart::getQuantity, quantity);
         cartMapper.update(null, updateWrapper);
+
+        log.info("更新购物车数量成功, cartId: {}, quantity: {}", cartId, quantity);
+
     }
 
     @Override
@@ -105,27 +115,41 @@ public class CartServiceImpl implements CartService {
         LambdaQueryWrapper<Cart> cartQueryWrapper = new LambdaQueryWrapper<>();
         cartQueryWrapper.eq(Cart::getUserId, userId);
 
-//        商品列表
         List<Cart> cartList = cartMapper.selectList(cartQueryWrapper);
 
         if (cartList.isEmpty()){
-            return List.of();
+            return new ArrayList<>();
         }
 
+        // 批量查询商品信息（优化：避免N+1查询）
+        List<Long> productIds = cartList.stream()
+                .map(Cart::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+        productWrapper.in(Product::getId, productIds);
+        List<Product> products = productMapper.selectList(productWrapper);
+
+        // 转换为Map便于查找
+        Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        // 构建CartVO列表
         List<CartVO> cartVOList = new ArrayList<>();
-//       遍历cartList
         for (Cart cart : cartList) {
-            Product product = productMapper.selectById(cart.getProductId());
-            CartVO cartVO = new CartVO();
-            cartVO.setCartId(cart.getId());
-            cartVO.setProductId(product.getId());
-            cartVO.setProductName(product.getName());
-            cartVO.setPrice(product.getPrice());
-            cartVO.setQuantity(cart.getQuantity());
-            cartVO.setSubtotal(product.getPrice().multiply(new BigDecimal(cart.getQuantity())));
-            cartVOList.add(cartVO);
+            Product product = productMap.get(cart.getProductId());
+            if (product != null) {
+                CartVO cartVO = new CartVO();
+                cartVO.setCartId(cart.getId());
+                cartVO.setProductId(product.getId());
+                cartVO.setProductName(product.getName());
+                cartVO.setPrice(product.getPrice());
+                cartVO.setQuantity(cart.getQuantity());
+                cartVO.setSubtotal(product.getPrice().multiply(new BigDecimal(cart.getQuantity())));
+                cartVOList.add(cartVO);
+            }
         }
-
 
         return cartVOList;
     }
@@ -135,10 +159,10 @@ public class CartServiceImpl implements CartService {
     @Override
     public void addToCart(AddToCartDTO addToCartDTO, Long userId) {
         if (userId == null){ // 判断用户是否登录
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (!(addToCartDTO.getQuantity()>0)){
+        if (addToCartDTO.getQuantity() <= 0){
             throw new BusinessException(ErrorCode.CART_QUANTITY_INVALID);
         }
 
@@ -152,14 +176,13 @@ public class CartServiceImpl implements CartService {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        if (!product.getStatus().equals(ProductStatus.ON_SHELF.getCode())){ //判断有没有上架
+        if (product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())){ //判断有没有上架
             throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
         }
 
-        if (!(product.getStock()>=addToCartDTO.getQuantity())){
+        if (product.getStock() < addToCartDTO.getQuantity()){
             throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
         }
-
 
         LambdaQueryWrapper<Cart> queryWrapper = new LambdaQueryWrapper<>();
 
@@ -178,14 +201,19 @@ public class CartServiceImpl implements CartService {
             updateWrapper.eq(Cart::getId, duplicateProducts.getId())
                     .setSql("quantity = quantity + " + addToCartDTO.getQuantity());
             cartMapper.update(null, updateWrapper);
+
+            log.info("更新购物车商品数量, userId: {}, productId: {}, newQuantity: {}",
+                    userId, addToCartDTO.getProductId(), newQuantity);
+
         }else {
             Cart cart = new Cart();
             cart.setUserId(userId);
             cart.setProductId(addToCartDTO.getProductId());
             cart.setQuantity(addToCartDTO.getQuantity());
             cartMapper.insert(cart);
+            log.info("添加商品到购物车, userId: {}, productId: {}, quantity: {}",
+                    userId, addToCartDTO.getProductId(), addToCartDTO.getQuantity());
         }
-
 
     }
 }
