@@ -145,6 +145,8 @@ public class ProductServicelmpl implements ProductService {
             throw new BusinessException(PRODUCT_ID_REQUIRED);
         }
 
+
+
         Product product = productMapper.selectById(id);
         if (product==null){
             throw new BusinessException(PRODUCT_NOT_FOUND);

@@ -2,7 +2,7 @@ package com.gadhub.overseasproduct.vo;
 
 import lombok.Data;
 import java.math.BigDecimal;
-
+// 购物车VO，返回给前端的购物车信息
 @Data
 public class CartVO {
     private Long cartId;        // 购物车ID

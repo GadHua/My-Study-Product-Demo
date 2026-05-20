@@ -38,12 +38,12 @@ public class UserServiceImpl implements UserService {
 //        邮箱校验
         validateEmail(userRegisterDTO.getEmail());
 
-        // 1. 校验密码和确认密码是否一致
+        // 1. 校验两次密码是否一致
         if (!userRegisterDTO.getPassword().equals(userRegisterDTO.getConfirmPassword())) {
             throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
 
-        // 2. 检查邮箱是否已存在
+        // 2. 检查邮箱是否重复
 
         LambdaQueryWrapper<User> wrapperA = new LambdaQueryWrapper<>();// 用LambdaQueryWrapper来构造查询条件 防止注入
 
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
-        // 2. 检查用户名是否已存在
+        // 2. 检查用户名是否已重复
         LambdaQueryWrapper<User> wrapperB = new LambdaQueryWrapper<>();
         wrapperB.eq(User::getName, userRegisterDTO.getUsername());
         boolean repeatNames = userMapper.exists(wrapperB);
@@ -78,11 +78,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void updateUserInfo(Long userId, UpdateUserInfoDTO updateUserInfoDTO) {
+        // 判断有没有这个用户
         User user = userMapper.selectById(userId);
         if (user == null){
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
+        // 判断更新后的字段在数据库有没有使用
         if (updateUserInfoDTO.getEmail() != null && !updateUserInfoDTO.getEmail().equals(user.getEmail())) {
             // 检查邮箱是否被其他用户使用
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();

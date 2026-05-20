@@ -13,7 +13,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("海外电商产品管理系统 API")
+                        .title("海外电商管理系统 API")
                         .version("1.0")
                         .description("提供用户、商品、购物车、订单、支付等功能接口")
                         .contact(new Contact()

@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
-        // 捕获所有未预期的异常
+        // 抓没配的异常
         log.error("未知异常 - 消息: {}", e.getMessage(), e);
         return Result.error("系统异常，请联系管理员");
     }

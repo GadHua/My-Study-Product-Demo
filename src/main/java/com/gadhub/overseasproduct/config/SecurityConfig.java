@@ -19,7 +19,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. 关闭 CSRF（跨站请求伪造）保护，方便前后端分离测试
+                // 关掉跨站保护，方便测试
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -27,13 +27,13 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
 
-                // 2. 定义哪些接口需要保护，哪些可以公开
+                // 定义哪些接口需要保护，哪些可以公开
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                        "/api/v1/backend/user/register",
                                 "/api/v1/backend/user/login",
 //                                "/api/v1/backend/order/**",
-                                "/api/v1/backend/product/**",
+//                                "/api/v1/backend/product/**",
 //                                "/api/v1/backend/cart/**",
 //                                "/api/v1/backend/payment/**",
                                 //  swagger
@@ -41,8 +41,8 @@ public class SecurityConfig {
 //                                "/swagger-ui.html",
                                 "/v3/api-docs/**"
 //                                "/api-docs/**"
-                        ).permitAll() // 注册接口公开
-                        .anyRequest().authenticated()                         // 其他所有接口都必须登录
+                        ).permitAll() // 登录注册接口公开
+                        .anyRequest().authenticated()    // 其他所有接口都必须登录
                 );
         return http.build();
     }
