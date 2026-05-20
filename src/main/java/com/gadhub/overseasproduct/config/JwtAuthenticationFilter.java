@@ -44,6 +44,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("用户认证成功, userId: {}", userId);
             } else {
                 log.warn("JWT Token验证失败");
+                // 验证失败返回 401
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":15001,\"message\":\"Token无效\"}");
+                return;
             }
         }
 

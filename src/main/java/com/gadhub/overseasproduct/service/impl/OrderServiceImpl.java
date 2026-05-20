@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.gadhub.overseasproduct.common.constant.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,37 +52,50 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItemDTO> items = createOrderDTO.getItems();
 
         log.info("开始创建订单, userId: {}, 商品数量: {}", userId, items.size());
+        // 1. 批量查询所有商品（只查一次数据库）
+        List<Long> productIds = items.stream()
+                .map(OrderItemDTO::getProductId)
+                .collect(Collectors.toList());
 
-        // 2. 计算总金额
+        List<Product> products = productMapper.selectBatchIds(productIds);
+        Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        // 2. 验证商品并计算总金额
         BigDecimal totalAmount = BigDecimal.ZERO;
+        // 2. 计算总金额
         for (OrderItemDTO item : items) {
-            Product product = productMapper.selectById(item.getProductId());
-            // 验证商品是否存在、是否上架
-            if (product == null){
+            Product product = productMap.get(item.getProductId());
+
+            // 验证商品是否存在
+            if (product == null) {
                 throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
             }
 
-            if (product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())){
+            // 验证商品是否上架
+            if (product.getStatus().equals(ProductStatus.OFF_SHELF.getCode())) {
                 throw new BusinessException(ErrorCode.PRODUCT_OFF_SHELF);
             }
 
-            if(product.getStock() < item.getQuantity()){
-                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
-            }
-
-            // 扣减库存
-            product.setStock(product.getStock() - item.getQuantity());
-
-            // 使用 updateById 触发乐观锁
-            int rows = productMapper.updateById(product);
-
-            // 检查是否更新成功（乐观锁失败时 rows=0）
-            if (rows == 0) {
+            // 验证库存
+            if (product.getStock() < item.getQuantity()) {
                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
             }
 
+            // 3. 使用原子操作扣减库存（防止超卖）
+            LambdaUpdateWrapper<Product> wrapper = new LambdaUpdateWrapper<>();
+            wrapper.eq(Product::getId, product.getId())
+                    .ge(Product::getStock, item.getQuantity())  // 确保库存充足
+                    .setSql("stock = stock - " + item.getQuantity());
+
+            int rows = productMapper.update(null, wrapper);
+            if (rows == 0) {
+                throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT);
+            }
             // 累加总金额
-            totalAmount = totalAmount.add(product.getPrice().multiply(new BigDecimal(item.getQuantity())));
+            totalAmount = totalAmount.add(
+                    product.getPrice().multiply(new BigDecimal(item.getQuantity()))
+            );
         }
 
         // 3. 创建订单主表
